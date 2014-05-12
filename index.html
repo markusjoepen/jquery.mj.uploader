@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Untitled Document</title>
+<script src="jquery-1.11.0.min.js"></script>
+<script src="jquery.mj.uploader.js"></script>
+<script>
+$(function(){
+	
+var settings = {};	
+$('input[type="file"]').uploader({dir:'uploads',height:'200px',conflict:'keep',css:'styles.css',dialog_remove:'Soll die Datei wirklich gelöscht werden?'},function(response){
+	
+	var str='';
+	if(response.status == 1) str = 'Die Datei "' + response.file + '" wurde erfolgreich hochgeladen.'
+	if(response.status == 2) str = 'Die Datei "' + response.file + '" wurde gelöscht.'
+	
+	$('#dev').html(str);
+});
+});
+</script>
+<style type="text/css">
+iframe{
+	border:1px solid #ccc;
+}
+</style>
+</head>
+
+<body>
+<form name="form1" enctype="multipart/form-data" method="post" action="">
+  <input type="file" name="file1">
+</form>
+<div id="dev"></div>
+</body>
+</html>
