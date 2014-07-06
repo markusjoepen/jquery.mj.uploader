@@ -2,34 +2,111 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Untitled Document</title>
-<script src="jquery-1.11.0.min.js"></script>
+<title>jquery.mj_uploader</title>
+<link href="../_css/code.css" rel="stylesheet" type="text/css">
+<script src="../_lib/jquery-1.11.1.min.js"></script>
 <script src="jquery.mj.uploader.js"></script>
 <script>
 $(function(){
-	
 var settings = {};	
-$('input[type="file"]').uploader({dir:'uploads',height:'200px',conflict:'keep',css:'styles.css',dialog_remove:'Soll die Datei wirklich gelöscht werden?'},function(response){
-	
-	var str='';
-	if(response.status == 1) str = 'Die Datei "' + response.file + '" wurde erfolgreich hochgeladen.'
-	if(response.status == 2) str = 'Die Datei "' + response.file + '" wurde gelöscht.'
-	
-	$('#dev').html(str);
-});
+$('input[type="file"]').mj_uploader({
+	dir:'uploads',
+	height:'200px',
+	fileTypes: [],
+	dialog_remove:'Soll die Datei wirklich gelöscht werden?'
+	},function(response){
+		var str='';
+		if(response.status == 1) str = 'Die Datei "' + response.file + '" wurde erfolgreich hochgeladen.'
+		if(response.status == 2) str = 'Die Datei "' + response.file + '" wurde gelöscht.'
+		$('#dev').html(str);
+	});
 });
 </script>
-<style type="text/css">
-iframe{
-	border:1px solid #ccc;
-}
-</style>
 </head>
-
 <body>
-<form name="form1" enctype="multipart/form-data" method="post" action="">
-  <input type="file" name="file1">
-</form>
-<div id="dev"></div>
+<div id="wrapper">
+  <div id="stage">
+    <h1>jquery.mj_uploader</h1>
+    <p>Simple
+    javascript enhanced, iframe based file uploader using PHP which displays uploaded images, videos and swf files after upload, and has the option to delete uploaded files (on doubleclick)
+    <p><strong>Basic Usage</strong></p>
+      <code>$('#file').mj_uploader({dir:'uploads'});</code></p>
+      <p>Dependencies: jQuery, PHP &gt;= 5.3</p>
+    <section>
+    <h1>Demo</h1>
+      <form name="form1" enctype="multipart/form-data" method="post" action="">
+        <input type="file" name="file1">
+      </form>
+        <div id="dev"></div>
+    </section>
+    <section>
+    <table id="properties">
+     <thead>
+     <tr>
+     	<th>Property</th><th>Default</th><th>Description</th>
+      </tr>
+     <tr>
+       <td>handler</td>
+       <td>'mj.uploader.php'</td>
+       <td>path to the php file that handles the upload</td>
+     </tr>
+     <tr>
+       <td>dir</td>
+       <td>'/'</td>
+       <td>path to the upload directory.</td>
+     </tr>
+     </thead>
+     <tbody>
+     <tr>
+       <td>directoryCheck</td>
+       <td>true</td>
+       <td><p>checks if [dir] exists and if it has the writing permissions.</p>
+         <p>Helpful for development, set to &quot;false&quot; in production mode<br>
+          </p></td>
+     </tr>
+     <tr>
+       <td>width</td>
+       <td>'100%'</td>
+       <td></td>
+     </tr>
+     <tr>
+       <td>height</td>
+       <td>'100%'</td>
+       <td></td>
+     </tr>
+     <tr>
+       <td>fileTypes</td>
+       <td>[]</td>
+       <td>Array of allowed file extensions. By default (empty array), all extension are allowed. (e.g. ['jpg','gif','png']</td>
+     </tr>
+     <tr>
+       <td>fileName</td>
+       <td><strong>keep</strong>,auto</td>
+       <td>&quot;keep&quot; keeps the original filename upon upload, &quot;auto&quot; generates a unique random filename</td>
+     </tr>
+     <tr>
+       <td>fileConflict</td>
+       <td><strong>keep</strong>, replace</td>
+       <td>&quot;keep&quot; does not overwrite files of the same name in 'dir', but appends a [_int] suffix to the fileName (e.g. 'fileName_1.jpg') if it exists, &quot;replace&quot; replaces the existing file with the new one.</td>
+     </tr>
+     <tr>
+       <td>fileRemove</td>
+       <td>false,true</td>
+       <td>lets the user remove the file after the upload has completed. This will physically remove the file from your server's upload directory ('dir').</td>
+     </tr>
+     <tr>
+       <td>&nbsp;</td>
+       <td>&nbsp;</td>
+       <td></td>
+     </tr>
+     <tr>
+       <td>&nbsp;</td>
+       <td>&nbsp;</td>
+       <td></td>
+     </tr>
+     </tbody>
+    </table>
+</div>
+</div>
 </body>
 </html>

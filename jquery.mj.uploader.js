@@ -1,29 +1,32 @@
-// jQuery based file uploader
-// simple, iframe based uploader which displays uploaded images, videos and swf files after upload, and gives the option to delete uploaded files (on doubleclick)
-// Version 1.0
-//
-// markus joepen
-// www.joepen.de
-// !!! conflict "ask" has not been implemented yet and should not been used! (2014-04-27) !!!
+/*
+ * jQuery mj_uploader plugin
+ * jQuery based file uploader
+ * simple, iframe based uploader which displays uploaded images, videos and swf files after upload, and gives the option to delete uploaded files (on doubleclick)
+ * 
+ * v 1.1 // 2014-07-06
+ * (c) 2012, 2013, 2014 markus joepen
+ * learn more about this plugin at
+ * http://www.emjay-media.com/code/jquery.mj_uploader/
+ *
+ */
 
 if(jQuery)(function($) {
 	
 	var settings = {
-			handler: 'mj_uploader.php', // the php file that will be displayed inside the iframe and handles the upload
-			dir: '/' , // the directory where your file will be uploaded
-			directorycheck:true, // if TRUE the handler php file will check if the directory exists and if it is writable, set to FALSE in production mode
-			filetypes:'', // comma separated list of allowed filetypes, if empty: all filetypes allowed 
-			filename:'keep', // ["keep","auto"] "keep" keeps the file's name, "auto" generates a unique random filename
-			conflict:'keep', // ["keep","overwrite","ask"] "keep" does not overwrite files of the same name in 'dir', but appends a [_int] suffix to the filename (e.g. 'filename_1.jpg')
-			remove: true, // if set to TRUE, user can doubleclick the result with the class "classname" (see below) and gets a prompt to remove (unlink!) the file from dir.
-			width:'100%', // width of the iframe that replaces your file field
-			height:'100%', // height of the iframe that replaces your file field
-			frameborder: 0, // iframe appearance
-			classname:'uploadedFile', // the class name that the uploaded file will receive
-			css:'', // url to css file which will be included in the iframe (handler file)
-			dialog_remove:'Remove the file?',
-			dialog_filetypes:'Sorry!\nYou may only upload "{filetypes}" files!',
-			dialog_conflict:'A file with this name already exists. Would you like to replace this file?'
+			handler: 			'mj.uploader.php',
+			dir: 				'/' ,
+			directoryCheck:		true,
+			fileTypes:			[],
+			fileName:			'keep', // ["keep","auto"]
+			fileConflict:		'keep', // ["keep","overwrite"]
+			fileRemove: 		true, // 
+			width:				'100%', 
+			height:				'100%', 
+			className:			'uploadedFile',
+			css:				'',
+			dialog_remove:		'Remove the file?',
+			dialog_fileType:	'Sorry!\nYou may only upload "{fileType}" files!',
+			dialog_conflict:	'A file with this name already exists. Would you like to replace this file?'
 		};
 			
 	var callbackFunc;	
@@ -33,35 +36,51 @@ if(jQuery)(function($) {
 	}
 		
 	$.extend($.fn, {
-		uploader : function(options, callback){
+		
+		mj_uploader : function(options, callback){
 			callbackFunc = callback;
     		jQuery.extend(settings, options);
-			settings.filetypes = settings.filetypes.toLowerCase().replace(/\s/g, '');
 			
-			var parameters = [];
-				parameters.push('dir=' + settings.dir);
-				parameters.push('directorycheck=' + settings.directorycheck);
-				parameters.push('name=' + $(this).attr('name'));
-				parameters.push('id=' + $(this).attr('id'));
-				parameters.push('value=' + $(this).val());
-				parameters.push('filename=' + settings.filename);
-				parameters.push('conflict=' + settings.conflict);
-				parameters.push('classname=' + settings.classname);
-				parameters.push('css=' + settings.css);
+			for(var i in settings.fileTypes) settings.fileTypes[i] = settings.fileTypes[i].toLowerCase().replace(/\s/g, '');
+			
+			var parameters = {
+				name: $(this).attr('name'),
+				id: $(this).attr('name'),
+				value: $(this).val(),
+				dir: settings.dir,
+				fileTypes: settings.fileTypes,
+				fileName: settings.fileName,
+				fileConflict: settings.fileConflict,
+				className: settings.className,
+				directoryCheck: settings.directoryCheck,
+				css: settings.css
+			};
 			
 			
 			return this.each(function(){
 			
 				var unique = '_' + Math.random().toString(36).substr(2, 9);
-					
-				var $iframe = $('<iframe name="' + unique + '" id="' + unique + '"' +
-								'" width="'+settings.width + '" height="' + settings.height + '" frameborder="' + settings.frameborder +
-								'" src="'+settings.handler + '?'+btoa(parameters.join('&')) + '"></iframe>');			
 				
-				var $hidden = $('<input type="hidden" name="' + $(this).attr('name') + '" id="'+$(this).attr('id') + '" value="' + $(this).val()+'">');
+				var $iframe = $('<iframe />',{
+					src: settings.handler + '?' + btoa($.param(parameters)),
+					name: unique,
+					id: unique,
+					width:settings.width,
+					height:settings.height,
+					frameborder:0
+				});
+				
 				var $progress = $(progress2);
 				
+				var $hidden = $('<input />',{
+					type:'hidden',
+					name:$(this).attr('name'),
+					id:$(this).attr('id'),
+					value:$(this).val()
+				});
+				
 				$progress.css({"position":"relative","left":"0","top":"0","display":"none"});			
+				
 				$(this).replaceWith($iframe);
 				$iframe.before($progress);
 				$iframe.after($hidden);
@@ -74,11 +93,10 @@ if(jQuery)(function($) {
 				
 				// pre-upload actions
 				
-				if(settings.filetypes != ''){
+				if(settings.fileTypes.length > 0){
 					var file_ext=file.toLowerCase().split('.').pop();
-					var allowed_ext = settings.filetypes.split(',');
-					if($.inArray(file_ext,allowed_ext) == -1){
-						return alert(mystatus(settings.dialog_filetypes,'{filetypes}',allowed_ext.join('", "')));
+					if($.inArray(file_ext,settings.fileTypes) == -1){
+						return alert(mystatus(settings.dialog_fileType,'{fileType}',settings.fileTypes.join('", "')));
 					}
 				}
 				
@@ -91,16 +109,14 @@ if(jQuery)(function($) {
 				
 				if(typeof callbackFunc == 'function') callbackFunc.call(this, {file:file,status:status});
 				
-				if(status == 2) file=''; // <-- datei wurde gelöscht
+				if(status == 2) file=''; // <-- file has been unlinked
 				
-				$('#'+ifrm).prev('div').hide(); // $progress ausblenden
-				$('#'+ifrm).css("visibility","visible"); // iframe wieder sichtbar
-				$('#'+ifrm).next('input[type="hidden"]').val(file); // hidden field bekommt den Namen der Datei
+				$('#'+ifrm).prev('div').hide();
+				$('#'+ifrm).css("visibility","visible");
+				$('#'+ifrm).next('input[type="hidden"]').val(file);
 				
-				
-	
-				if(settings.remove){
-					var preview = window.frames[ifrm].document.getElementsByClassName(settings.classname);			
+				if(settings.fileRemove === true){
+					var preview = window.frames[ifrm].document.getElementsByClassName(settings.className);			
 					$(preview).on('dblclick',function(){ 
 						var confirmPrompt = confirm(settings.dialog_remove);
 						if(confirmPrompt) window.frames[ifrm].document.forms[1].submit();
