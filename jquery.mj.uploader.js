@@ -18,15 +18,19 @@ if(jQuery)(function($) {
 			directoryCheck:		true,
 			fileTypes:			[],
 			fileName:			'keep', // ["keep","auto"]
-			fileConflict:		'keep', // ["keep","overwrite"]
-			fileRemove: 		true, // 
+			fileConflict:		'keep', // ["keep","replace"]
+			fileRemove: 		false, // 
 			width:				'100%', 
 			height:				'100%', 
 			className:			'uploadedFile',
 			css:				'',
-			dialog_remove:		'Remove the file?',
-			dialog_fileType:	'Sorry!\nYou may only upload "{fileType}" files!',
-			dialog_conflict:	'A file with this name already exists. Would you like to replace this file?'
+			statusBox:			false,
+			statusUploadSuccess:'Your file <em>"{fileName}"</em> has been uploaded and saved as <em>"{fileNameServer}"</em>. Would you like to <a href="{url}" target="_blank">download</a> it again?',
+			statusUploadError:	'Something went wrong! Your file could not be uploaded.',
+			statusDeleteConfirm:'Remove the file "{fileName}"?',
+			statusDeleteSuccess:'Your file was removed.',
+			statusDeleteError:	'Your file could not be removed.',
+			statusFileTypes:	'Sorry!\n"{fileName}" cannot be uploaded, because it is a "{fileType}" file. You may only upload <strong><em>{fileTypes}</em></strong> files!',
 		};
 			
 	var callbackFunc;	
@@ -42,6 +46,7 @@ if(jQuery)(function($) {
     		jQuery.extend(settings, options);
 			
 			for(var i in settings.fileTypes) settings.fileTypes[i] = settings.fileTypes[i].toLowerCase().replace(/\s/g, '');
+			settings.className = settings.className.replace(/^[\.]/, '');
 			
 			var parameters = {
 				name: $(this).attr('name'),
@@ -56,9 +61,7 @@ if(jQuery)(function($) {
 				css: settings.css
 			};
 			
-			
 			return this.each(function(){
-			
 				var unique = '_' + Math.random().toString(36).substr(2, 9);
 				
 				var $iframe = $('<iframe />',{
@@ -87,16 +90,53 @@ if(jQuery)(function($) {
 			})
 		},
 		
-		mjIfrmXchange : function(ifrm,file,status){
+		mjIfrmXchange : function(ifrm,fn_client, fn_srv, status){
+						
+			var statusTexts = {
+				statusUploadSuccess: 	settings.statusUploadSuccess,
+				statusUploadError:		settings.statusUploadError,
+				statusDeleteConfirm:	settings.statusDeleteConfirm,
+				statusDeleteSuccess:	settings.statusDeleteSuccess,
+				statusDeleteError:		settings.statusDeleteError,
+				statusFileTypes:		settings.statusFileTypes
+			}
+	
+			for(var i in statusTexts){
+				var str = statusTexts[i];
+				str = str.replace('{fileName}', fn_client.split('\\').pop());
+				str = str.replace('{fileNameServer}', fn_srv);
+				str = str.replace('{fileType}', fn_srv.split('.').pop());
+				str = str.replace('{fileTypes}', '"' + settings.fileTypes.join('", "')+'"');
+				str = str.replace('{url}', settings.dir+'/'+fn_srv);
+				statusTexts[i] = str;
+			}
+	
+			var statusBoxText = '', statusClass='';
 			
+			$(settings.statusBox).html('').attr('class','');
+			
+			switch(parseInt(status)){
+				case 0: statusBoxText = statusTexts.statusFileTypes; statusClass = 'statusFileTypes'; break;
+				case 1: statusBoxText = statusTexts.statusUploadSuccess; statusClass = 'statusUploadSuccess'; break;
+				case 10: statusBoxText = statusTexts.statusUploadError; statusClass = 'statusUploadError'; break;
+				case 2: statusBoxText = statusTexts.statusDeleteSuccess; statusClass = 'statusDeleteSuccess'; break;
+				case 20: statusBoxText = statusTexts.statusDeleteError; statusClass = 'statusDeleteError'; break;
+			}
+				
 			if (status == 0) {
 				
 				// pre-upload actions
 				
 				if(settings.fileTypes.length > 0){
-					var file_ext=file.toLowerCase().split('.').pop();
+					var file_ext=fn_client.toLowerCase().split('.').pop();
 					if($.inArray(file_ext,settings.fileTypes) == -1){
-						return alert(mystatus(settings.dialog_fileType,'{fileType}',settings.fileTypes.join('", "')));
+						
+						if(settings.statusBox)
+							$(settings.statusBox).html(statusBoxText).addClass(statusClass);
+						else
+							alert(statusBoxText);
+							
+						return;
 					}
 				}
 				
@@ -106,19 +146,20 @@ if(jQuery)(function($) {
 			}else {
 			
 				// post-upload actions
+				//if(typeof callbackFunc == 'function') callbackFunc.call(this, {file:file,status:status});
 				
-				if(typeof callbackFunc == 'function') callbackFunc.call(this, {file:file,status:status});
+				if(status === 2) fn_srv=''; // <-- file has been unlinked
 				
-				if(status == 2) file=''; // <-- file has been unlinked
+				if(settings.statusBox) $(settings.statusBox).html(statusBoxText).addClass(statusClass);
 				
 				$('#'+ifrm).prev('div').hide();
 				$('#'+ifrm).css("visibility","visible");
-				$('#'+ifrm).next('input[type="hidden"]').val(file);
+				$('#'+ifrm).next('input[type="hidden"]').val(fn_srv);
 				
 				if(settings.fileRemove === true){
 					var preview = window.frames[ifrm].document.getElementsByClassName(settings.className);			
 					$(preview).on('dblclick',function(){ 
-						var confirmPrompt = confirm(settings.dialog_remove);
+						var confirmPrompt = confirm(statusTexts.statusDeleteConfirm);
 						if(confirmPrompt) window.frames[ifrm].document.forms[1].submit();
 					});
 				}	

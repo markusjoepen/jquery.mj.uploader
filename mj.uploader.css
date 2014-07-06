@@ -1,0 +1,16 @@
+.statusFileTypes{
+	background-color:#FFC;
+	color:#000;
+}
+
+.statusUploadSuccess, .statusDeleteSuccess{
+	background-color:#9FC;
+	color:green;
+}
+
+.statusUploadError{
+	background-color:#FCF;
+	color:#900;
+	border:1px solid #900;
+}
+

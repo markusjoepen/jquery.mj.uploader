@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <title>jquery.mj_uploader</title>
 <link href="../_css/code.css" rel="stylesheet" type="text/css">
+<link href="mj.uploader.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+#status{
+	padding:0.25em 0.5em;
+	border-radius:4px;
+	height:2em;
+	line-height:2em;
+	border:1px solid #ccc;
+}
+
+#status strong{
+	color:#900;
+}
+
+</style>
 <script src="../_lib/jquery-1.11.1.min.js"></script>
 <script src="jquery.mj.uploader.js"></script>
 <script>
@@ -11,14 +26,10 @@ $(function(){
 var settings = {};	
 $('input[type="file"]').mj_uploader({
 	dir:'uploads',
-	height:'200px',
-	fileTypes: [],
-	dialog_remove:'Soll die Datei wirklich gelöscht werden?'
-	},function(response){
-		var str='';
-		if(response.status == 1) str = 'Die Datei "' + response.file + '" wurde erfolgreich hochgeladen.'
-		if(response.status == 2) str = 'Die Datei "' + response.file + '" wurde gelöscht.'
-		$('#dev').html(str);
+	directoryCheck:true,
+	fileName:'auto',
+	statusBox:'#status',
+	fileRemove:true
 	});
 });
 </script>
@@ -27,8 +38,7 @@ $('input[type="file"]').mj_uploader({
 <div id="wrapper">
   <div id="stage">
     <h1>jquery.mj_uploader</h1>
-    <p>Simple
-    javascript enhanced, iframe based file uploader using PHP which displays uploaded images, videos and swf files after upload, and has the option to delete uploaded files (on doubleclick)
+    <p>Simple javascript enhanced, iframe based file uploader using PHP which displays uploaded images, videos and swf files after upload, and has the option to delete uploaded files (on doubleclick)
     <p><strong>Basic Usage</strong></p>
       <code>$('#file').mj_uploader({dir:'uploads'});</code></p>
       <p>Dependencies: jQuery, PHP &gt;= 5.3</p>
@@ -37,47 +47,48 @@ $('input[type="file"]').mj_uploader({
       <form name="form1" enctype="multipart/form-data" method="post" action="">
         <input type="file" name="file1">
       </form>
-        <div id="dev"></div>
+        <div id="status"></div>
     </section>
     <section>
     <table id="properties">
      <thead>
      <tr>
-     	<th>Property</th><th>Default</th><th>Description</th>
+     	<th>Property</th>
+     	<th>Values</th><th>Description</th>
       </tr>
      <tr>
        <td>handler</td>
-       <td>'mj.uploader.php'</td>
+       <td><strong>'mj.uploader.php'</strong></td>
        <td>path to the php file that handles the upload</td>
      </tr>
      <tr>
        <td>dir</td>
-       <td>'/'</td>
+       <td><strong>'/'</strong></td>
        <td>path to the upload directory.</td>
      </tr>
      </thead>
      <tbody>
      <tr>
        <td>directoryCheck</td>
-       <td>true</td>
+       <td><strong>true</strong>, false</td>
        <td><p>checks if [dir] exists and if it has the writing permissions.</p>
          <p>Helpful for development, set to &quot;false&quot; in production mode<br>
           </p></td>
      </tr>
      <tr>
        <td>width</td>
-       <td>'100%'</td>
+       <td><strong>'100%'</strong></td>
        <td></td>
      </tr>
      <tr>
        <td>height</td>
-       <td>'100%'</td>
+       <td><strong>'100%'</strong></td>
        <td></td>
      </tr>
      <tr>
        <td>fileTypes</td>
-       <td>[]</td>
-       <td>Array of allowed file extensions. By default (empty array), all extension are allowed. (e.g. ['jpg','gif','png']</td>
+       <td><strong>[]</strong></td>
+       <td>Array of allowed file extensions. By default (array is empty), all extensions are allowed. (You may limit this e.g. to image files only: ['jpg','gif','png']). The check will be performed <em>case insensitive</em>!</td>
      </tr>
      <tr>
        <td>fileName</td>
@@ -87,23 +98,56 @@ $('input[type="file"]').mj_uploader({
      <tr>
        <td>fileConflict</td>
        <td><strong>keep</strong>, replace</td>
-       <td>&quot;keep&quot; does not overwrite files of the same name in 'dir', but appends a [_int] suffix to the fileName (e.g. 'fileName_1.jpg') if it exists, &quot;replace&quot; replaces the existing file with the new one.</td>
+       <td>&quot;<em>keep</em>&quot; does not overwrite files of the same name in 'dir', but appends a &quot;_number&quot; suffix to the fileName (e.g. 'fileName_1.jpg') if it exists.<br>         
+         &quot;<em>replace</em>&quot; replaces the existing file with the new one.</td>
      </tr>
      <tr>
        <td>fileRemove</td>
-       <td>false,true</td>
-       <td>lets the user remove the file after the upload has completed. This will physically remove the file from your server's upload directory ('dir').</td>
+       <td><strong>false</strong>,true</td>
+       <td>lets the user remove the file after the upload has completed. This will physically remove (<em>unlink</em>) the file from your server's upload directory ('dir').</td>
      </tr>
      <tr>
-       <td>&nbsp;</td>
-       <td>&nbsp;</td>
-       <td></td>
+       <td>className</td>
+       <td><strong>'uploadedFile'</strong></td>
+       <td>assign a classname which will be applied to your uploaded files.<br>
+         All files will automatically receive their file extension as a classname.</td>
      </tr>
      <tr>
-       <td>&nbsp;</td>
-       <td>&nbsp;</td>
-       <td></td>
+       <td>statusBox</td>
+       <td>false</td>
+       <td><p>expects an element</p>
+         <p>if statusBox is set, you may provide information to the user.</p></td>
      </tr>
+     <tr>
+       <td>statusUploadSuccess</td>
+       <td>Your file {fileName} has been uploaded.</td>
+       <td rowspan="6"><p>{fileName}  will be the name of the file as it was present on the user's hard drive</p>
+         <p>{fileNameServer} will be the name of the file as it was saved on the server.</p>
+         <p>&nbsp;</p>
+         <p>{fileTypes} will be a comma separated list of allowed file extensions as specified in the &quot;fileTypes&quot; property</p>
+         <p>{fileType} is the extension of the file that the user wants to upload.</p>
+         <p>{url} will provide a link to the uploaded file.</p></td>
+     </tr>
+     <tr>
+       <td>statusUploadError</td>
+       <td>The file {fileName} could not be uploaded</td>
+       </tr>
+     <tr>
+       <td>statusDeleteConfirm</td>
+       <td>Remove this file?</td>
+       </tr>
+     <tr>
+       <td>statusDeleteSuccess</td>
+       <td>Your file has been deleted.</td>
+       </tr>
+     <tr>
+       <td>statusDeleteError</td>
+       <td>Your file could not be removed.</td>
+       </tr>
+     <tr>
+       <td>statusFileTypes</td>
+       <td>Sorry! You may only upload {fileTypes} files.</td>
+       </tr>
      </tbody>
     </table>
 </div>
