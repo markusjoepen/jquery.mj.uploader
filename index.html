@@ -11,7 +11,8 @@
 	border-radius:4px;
 	height:2em;
 	line-height:2em;
-	border:1px solid #ccc;
+	margin-top:0em;
+	margin-bottom:1em;
 }
 
 #status strong{
@@ -26,10 +27,12 @@ $(function(){
 var settings = {};	
 $('input[type="file"]').mj_uploader({
 	dir:'uploads',
+	height:'500px',
 	directoryCheck:true,
 	fileName:'auto',
 	statusBox:'#status',
-	fileRemove:true
+	fileRemove:true,
+	css:'iframe.css'
 	});
 });
 </script>
@@ -44,12 +47,22 @@ $('input[type="file"]').mj_uploader({
       <p>Dependencies: jQuery, PHP &gt;= 5.3</p>
     <section>
     <h1>Demo</h1>
-      <form name="form1" enctype="multipart/form-data" method="post" action="">
+             <div id="status"></div>
+ <form name="form1" enctype="multipart/form-data" method="post" action="">
         <input type="file" name="file1">
       </form>
-        <div id="status"></div>
     </section>
     <section>
+    <h1>How does it work?</h1>
+    <p><em>mj_uploader</em> replaces the element that you assign it to with </p>
+    <ol>
+      <li>an iframe (&lt;iframe src=&quot;mj.uploader.php&quot;&gt;) which contains its own a file field</li>
+      <li>a hidden field with the same name and id as your original file field, so the plugin doesn't confuse your form</li>
+    </ol>
+    <p>As soon as the user uploads a file through the file field inside the iframe a progress animation will appear, and when the file has finished uploading, the file will be shown inside the iframe and the hidden field in your form will receive the filename as its value.</p>
+    </section>
+    <section>
+    <h1>Configuration</h1>
     <table id="properties">
      <thead>
      <tr>
@@ -59,7 +72,7 @@ $('input[type="file"]').mj_uploader({
      <tr>
        <td>handler</td>
        <td><strong>'mj.uploader.php'</strong></td>
-       <td>path to the php file that handles the upload</td>
+       <td>path to the php file that handles the upload. If you keep everything in the same folder, you do not have to assign this.</td>
      </tr>
      <tr>
        <td>dir</td>
@@ -71,19 +84,19 @@ $('input[type="file"]').mj_uploader({
      <tr>
        <td>directoryCheck</td>
        <td><strong>true</strong>, false</td>
-       <td><p>checks if [dir] exists and if it has the writing permissions.</p>
-         <p>Helpful for development, set to &quot;false&quot; in production mode<br>
+       <td><p>checks if [dir] exists and if it has the correct permissions.</p>
+         <p>Helpful for development, set to <em>false</em> in production mode<br>
           </p></td>
      </tr>
      <tr>
        <td>width</td>
        <td><strong>'100%'</strong></td>
-       <td></td>
+       <td>the width of your upload field. This affects the display size of the preview of the uploaded file.</td>
      </tr>
      <tr>
        <td>height</td>
        <td><strong>'100%'</strong></td>
-       <td></td>
+       <td>the height of your upload field. This affects the display size of the preview of the uploaded file.</td>
      </tr>
      <tr>
        <td>fileTypes</td>
@@ -98,35 +111,55 @@ $('input[type="file"]').mj_uploader({
      <tr>
        <td>fileConflict</td>
        <td><strong>keep</strong>, replace</td>
-       <td>&quot;<em>keep</em>&quot; does not overwrite files of the same name in 'dir', but appends a &quot;_number&quot; suffix to the fileName (e.g. 'fileName_1.jpg') if it exists.<br>         
-         &quot;<em>replace</em>&quot; replaces the existing file with the new one.</td>
+       <td><ul>
+         <li>&quot;<em>keep</em>&quot; does not overwrite files of the same name in [dir], but appends a &quot;_number&quot; suffix to the fileName (e.g. 'fileName_1.jpg') if a file of that name already exists.</li>
+         <li>&quot;<em>replace</em>&quot; replaces the existing file with the new one.</li>
+       </ul></td>
      </tr>
      <tr>
        <td>fileRemove</td>
        <td><strong>false</strong>,true</td>
-       <td>lets the user remove the file after the upload has completed. This will physically remove (<em>unlink</em>) the file from your server's upload directory ('dir').</td>
+       <td><p>lets the user remove the file after the upload has completed. This will physically remove (<em>unlink</em>) the file from your server's upload directory ('dir').</p>
+         <p>By default, doubleclicking the uploaded file will show the confirm dialog, but by adding the {btnDelete} variable to a statusUploadSuccess string, you may add a button for this in your statusBox (see below).</p></td>
      </tr>
      <tr>
        <td>className</td>
        <td><strong>'uploadedFile'</strong></td>
        <td>assign a classname which will be applied to your uploaded files.<br>
-         All files will automatically receive their file extension as a classname.</td>
+         Apart from [className], all files will automatically receive their file extension as a classname.</td>
+     </tr>
+     <tr>
+       <td>css</td>
+       <td><strong>false</strong></td>
+       <td>inject a css file into the iframe by setting its path here.</td>
+     </tr>
+     <tr>
+       <td>progressAnimation</td>
+       <td><strong>1</strong>,2</td>
+       <td>progress bar style (can be &quot;1&quot; or &quot;2&quot;)</td>
      </tr>
      <tr>
        <td>statusBox</td>
        <td>false</td>
        <td><p>expects an element</p>
-         <p>if statusBox is set, you may provide information to the user.</p></td>
+         <p>if [statusBox] is set to the ID of an element in your page,it will receive status updates from mj_uploader. It will be one of the  status messages in the remaining rows.</p>
+         <p>Additionally, your statusBox element will receive the class name of the returned status. (e.g. &quot;<em>class=&quot;statusUploadSuccess&quot;</em>)</p></td>
      </tr>
      <tr>
        <td>statusUploadSuccess</td>
        <td>Your file {fileName} has been uploaded.</td>
-       <td rowspan="6"><p>{fileName}  will be the name of the file as it was present on the user's hard drive</p>
-         <p>{fileNameServer} will be the name of the file as it was saved on the server.</p>
+       <td rowspan="6"><p>You may customize any of the status messages to your left. Several variables are at your disposal, which will be replaced as follows:</p>
+         <ul>
+           <li><strong>{fileName}</strong>  will be replaced the name of the file as it was present on the user's hard drive</li>
+           <li><strong>{fileNameServer}</strong> will be replaced with the name of the file as it was saved on the server.</li>
+           <li><strong>{fileTypes}</strong> will be replaced with a comma separated list of allowed file extensions as specified in the &quot;fileTypes&quot; property</li>
+           <li><strong>{fileType}</strong> is the extension of the file that the user wants to upload.</li>
+           <li><strong>{url}</strong> will be replaced with the url to the uploaded file.</li>
+           <li><strong>{btnCancel}</strong> will be replaced with a button that empties the contents of statusBox. The text of this button can be set in statusBtnCancel</li>
+           <li><strong>{btnDelete} </strong>will be replaced with a button that deletes.</li>
+         </ul>
          <p>&nbsp;</p>
-         <p>{fileTypes} will be a comma separated list of allowed file extensions as specified in the &quot;fileTypes&quot; property</p>
-         <p>{fileType} is the extension of the file that the user wants to upload.</p>
-         <p>{url} will provide a link to the uploaded file.</p></td>
+         <p>Don't forget the curly brackets &quot;{}&quot; in your strings or they won't be replaced!</p></td>
      </tr>
      <tr>
        <td>statusUploadError</td>
@@ -146,7 +179,7 @@ $('input[type="file"]').mj_uploader({
        </tr>
      <tr>
        <td>statusFileTypes</td>
-       <td>Sorry! You may only upload {fileTypes} files.</td>
+       <td>Sorry! You may not upload {fileType}  files. Only {fileTypes} files are supported.</td>
        </tr>
      </tbody>
     </table>
